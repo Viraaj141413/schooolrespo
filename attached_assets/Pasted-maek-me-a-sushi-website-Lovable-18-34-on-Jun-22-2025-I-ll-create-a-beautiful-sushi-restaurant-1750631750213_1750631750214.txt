@@ -1,0 +1,98 @@
+maek me a sushi website 
+Lovable
+18:34 on Jun 22, 2025
+
+I'll create a beautiful sushi restaurant website for you! This will be a modern, elegant site showcasing delicious sushi with a clean Japanese-inspired design.
+
+I'm envisioning a sophisticated website with:
+
+A stunning hero section with appetizing sushi imagery
+Clean typography and elegant spacing
+A menu section featuring different sushi categories
+About section highlighting the restaurant's story
+Contact information and location
+Smooth animations and hover effects
+A color palette inspired by traditional Japanese aesthetics (deep blacks, whites, and accent colors like salmon pink and wasabi green)
+Let me build this for you with a focus on visual appeal and user experience.
+
+
+Edited 2 files
+Generation stopped
+
+
+how do you mkae your ai make highly advandd codes
+Lovable
+18:35 on Jun 22, 2025
+
+I understand you're asking about how to get AI to generate more advanced code! Here are some effective strategies:
+
+1. Be Specific and Detailed
+Instead of "make a login form," try:
+
+"Create a login form with email validation, password strength checking, rate limiting, and JWT token handling"
+Include specific requirements, edge cases, and technical constraints
+2. Provide Context and Architecture
+Mention the specific technologies, patterns, or frameworks you want
+Describe the overall system architecture
+Reference existing code patterns you want to follow
+3. Ask for Best Practices
+Request error handling, security considerations
+Ask for performance optimizations
+Mention accessibility requirements
+Request TypeScript types and proper documentation
+4. Break Down Complex Features
+Start with a basic implementation
+Then ask for incremental improvements
+Request refactoring for better patterns
+Add advanced features step by step
+5. Use Technical Language
+Reference design patterns (Observer, Factory, etc.)
+Mention specific algorithms or data structures
+Use proper technical terminology
+6. Example of Advanced Request:
+Instead of: "Make a data table"
+
+Try: "Create a virtualized data table component with server-side pagination, sortable columns, row selection, bulk actions, column resizing, filtering with debounced search, and optimistic updates using React Query"
+
+The key is being very specific about what "advanced" means for your particular use case! What kind of advanced functionality are you looking to implement?
+
+
+
+no like how does lovable make high qulasity cxodes
+Lovable
+18:35 on Jun 22, 2025
+
+Ah, you're asking about how Lovable specifically generates high-quality code! Here's what makes Lovable effective at creating advanced, production-ready code:
+
+Lovable's Code Quality Features:
+1. Built-in Best Practices
+Uses modern React patterns (hooks, functional components)
+Implements TypeScript for type safety
+Follows established conventions and naming patterns
+Includes proper error boundaries and loading states
+2. Pre-configured Tech Stack
+React + TypeScript - Type-safe component development
+Tailwind CSS - Utility-first styling with consistent design
+shadcn/ui - High-quality, accessible component library
+React Query - Proper data fetching and caching
+React Router - Client-side routing
+3. Integrated Tooling
+ESLint for code quality enforcement
+Proper build configuration with Vite
+Hot reloading for instant feedback
+Package management handled automatically
+4. Advanced Patterns Built-in
+Responsive design by default
+Accessibility considerations
+Performance optimizations (code splitting, lazy loading)
+State management patterns
+Form validation with proper error handling
+5. Real-time Preview & Debugging
+Live preview helps catch issues immediately
+Console log access for debugging
+Ability to iterate quickly on complex features
+6. Architecture Awareness
+Creates focused, single-responsibility components
+Proper separation of concerns
+Reusable utility functions
+Clean import/export patterns

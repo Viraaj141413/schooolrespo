@@ -1,0 +1,220 @@
+const fs = require('fs');
+const path = require('path');
+
+// Your API endpoint
+const API_URL = 'https://rpelitis.created.app/api/code-generator';
+
+async function generateAndCreateFiles(description, options = {}) {
+  try {
+    const payload = {
+      description: description,
+      language: options.language || "",
+      framework: options.framework || "",
+      complexity: options.complexity || "",
+      fileType: options.fileType || "",
+      apiKey: options.apiKey || ""
+    };
+
+    console.log(`🤖 Generating code for: "${description}"`);
+    console.log(`⚙️  Options:`, payload);
+    
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log(`\n✅ ${data.message}`);
+      console.log(`📁 Creating ${data.files.length} files...`);
+      
+      // Create files
+      for (const file of data.files) {
+        const filePath = path.join(process.cwd(), file.filename);
+        
+        // Create directory if it doesn't exist
+        const dir = path.dirname(filePath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        
+        // Write the file
+        fs.writeFileSync(filePath, file.content, 'utf8');
+        console.log(`  ✅ Created: ${file.filename} (${file.language}) - ${file.lineCount} lines`);
+      }
+      
+      // Show metadata
+      console.log(`\n📊 Project Summary:`);
+      console.log(`  • Type: ${data.metadata.projectType}`);
+      console.log(`  • Language: ${data.metadata.language}`);
+      console.log(`  • Framework: ${data.metadata.framework}`);
+      console.log(`  • Complexity: ${data.metadata.complexity}`);
+      console.log(`  • Total files: ${data.metadata.totalFiles}`);
+      console.log(`  • Total lines: ${data.metadata.totalLines}`);
+      console.log(`  • Estimated size: ${data.metadata.estimatedSize} bytes`);
+      
+      if (data.metadata.dependencies && data.metadata.dependencies.length > 0) {
+        console.log(`  • Dependencies: ${data.metadata.dependencies.join(', ')}`);
+      }
+      
+      // Show suggestions
+      if (data.suggestions && data.suggestions.length > 0) {
+        console.log(`\n💡 Suggestions:`);
+        data.suggestions.forEach(suggestion => {
+          console.log(`  • ${suggestion}`);
+        });
+      }
+      
+      console.log(`\n🎉 Successfully created your ${data.metadata.projectType} project!`);
+      
+      return { success: true, files: data.files, metadata: data.metadata };
+    } else {
+      console.error('❌ Error:', data.error);
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    console.error('❌ Error generating files:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+// Usage examples and test function
+async function runExamples() {
+  console.log('🚀 AI Code Generator - Testing Examples\n');
+  
+  // Example 1: Simple React app
+  console.log('='.repeat(50));
+  await generateAndCreateFiles("Create a todo list app with React");
+  
+  // Wait a bit between examples
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Example 2: Express API
+  console.log('\n' + '='.repeat(50));
+  await generateAndCreateFiles("Build a REST API for user management", {
+    language: "javascript",
+    framework: "express",
+    complexity: "advanced"
+  });
+  
+  // Wait a bit between examples
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Example 3: Python script
+  console.log('\n' + '='.repeat(50));
+  await generateAndCreateFiles("Create a web scraper script", {
+    language: "python",
+    complexity: "intermediate"
+  });
+  
+  // Wait a bit between examples
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Example 4: Simple HTML website
+  console.log('\n' + '='.repeat(50));
+  await generateAndCreateFiles("Make a portfolio website with HTML and CSS");
+}
+
+// Interactive function for custom input
+async function generateCustom() {
+  const readline = require('readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  
+  const question = (prompt) => new Promise(resolve => rl.question(prompt, resolve));
+  
+  try {
+    console.log('\n🎯 Custom Code Generation');
+    console.log('Enter your project description and options:\n');
+    
+    const description = await question('📝 What do you want to build? ');
+    const language = await question('💻 Language (javascript/python/html/css - or leave blank): ');
+    const framework = await question('🔧 Framework (react/express/vue/angular - or leave blank): ');
+    const complexity = await question('⚡ Complexity (simple/intermediate/advanced - or leave blank): ');
+    
+    console.log('\n🚀 Generating your code...\n');
+    
+    await generateAndCreateFiles(description, {
+      language: language.trim() || undefined,
+      framework: framework.trim() || undefined,
+      complexity: complexity.trim() || undefined
+    });
+    
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    rl.close();
+  }
+}
+
+// Quick generation function
+async function quickGenerate(description) {
+  return await generateAndCreateFiles(description);
+}
+
+// Export functions for use as module
+module.exports = { 
+  generateAndCreateFiles, 
+  quickGenerate,
+  runExamples,
+  generateCustom
+};
+
+// If running directly, show menu
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  
+  if (args.length > 0) {
+    // Command line usage
+    const description = args.join(' ');
+    quickGenerate(description);
+  } else {
+    // Interactive menu
+    const readline = require('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    console.log('🤖 AI Code Generator for Replit');
+    console.log('Connected to: https://rpelitis.created.app/api/code-generator\n');
+    console.log('Choose an option:');
+    console.log('1. Run example projects');
+    console.log('2. Generate custom project');
+    console.log('3. Quick generate (enter description)');
+    console.log('4. Exit\n');
+    
+    rl.question('Enter your choice (1-4): ', async (choice) => {
+      switch (choice) {
+        case '1':
+          await runExamples();
+          break;
+        case '2':
+          await generateCustom();
+          break;
+        case '3':
+          rl.question('Enter project description: ', async (desc) => {
+            await quickGenerate(desc);
+            rl.close();
+          });
+          return;
+        case '4':
+          console.log('👋 Goodbye!');
+          break;
+        default:
+          console.log('❌ Invalid choice');
+      }
+      rl.close();
+    });
+  }
+}

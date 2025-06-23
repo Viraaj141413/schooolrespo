@@ -1,0 +1,107 @@
+const fs = require('fs');
+const path = require('path');
+
+// Your API endpoint
+const API_URL = 'https://aduajbsdj.created.app/api/code-generator';
+
+async function generateAndCreateFiles(description, options = {}) {
+  try {
+    const payload = {
+      description: description,
+      language: options.language || "javascript",
+      framework: options.framework || "",
+      complexity: options.complexity || "simple",
+      fileType: options.fileType || "single",
+      apiKey: options.apiKey || ""
+    };
+
+    console.log(`🤖 Generating code for: ${description}`);
+    
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log(`📁 Creating ${data.files.length} files...`);
+      
+      for (const file of data.files) {
+        const filePath = path.join(process.cwd(), file.filename);
+        
+        // Create directory if it doesn't exist
+        const dir = path.dirname(filePath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+
+        // Write the file
+        fs.writeFileSync(filePath, file.content, 'utf8');
+        console.log(`✅ Created: ${file.filename} (${file.language}) - ${file.lines} lines`);
+      }
+
+      console.log(`🎉 Successfully created ${data.files.length} files!`);
+      console.log(`📊 Total lines: ${data.metadata.totalLines}`);
+      console.log(`📏 Total size: ${data.metadata.totalSize} bytes`);
+      
+      return { success: true, files: data.files, metadata: data.metadata };
+    } else {
+      console.error('❌ Error:', data.error);
+      if (data.details) {
+        console.error('Details:', data.details);
+      }
+      return { success: false, error: data.error, details: data.details };
+    }
+  } catch (error) {
+    console.error('❌ Error generating files:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Usage examples:
+async function runExamples() {
+  // Simple JavaScript function
+  await generateAndCreateFiles("Create a simple calculator function");
+  
+  // Python script
+  await generateAndCreateFiles("Build a Python file organizer script", { 
+    language: "python" 
+  });
+  
+  // HTML with CSS
+  await generateAndCreateFiles("Make a responsive landing page", { 
+    language: "html",
+    complexity: "intermediate"
+  });
+  
+  // React component
+  await generateAndCreateFiles("Create a React todo list component", { 
+    language: "javascript",
+    framework: "React",
+    complexity: "intermediate"
+  });
+  
+  // JSON configuration
+  await generateAndCreateFiles("Generate a package.json for a Node.js project", { 
+    language: "json" 
+  });
+  
+  // Markdown documentation
+  await generateAndCreateFiles("Create API documentation", { 
+    language: "markdown" 
+  });
+}
+
+// Run the examples
+runExamples().catch(console.error);
+
+// Export the function for use in other files
+module.exports = { generateAndCreateFiles };

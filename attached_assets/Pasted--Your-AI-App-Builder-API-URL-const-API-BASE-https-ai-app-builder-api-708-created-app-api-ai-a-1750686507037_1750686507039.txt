@@ -1,0 +1,152 @@
+// Your AI App Builder API URL
+const API_BASE = 'https://ai-app-builder-api-708.created.app/api/ai-app-builder';
+
+// 1. Generate Code
+async function generateApp() {
+  try {
+    const response = await fetch(`${API_BASE}?endpoint=generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        appType: 'web app',
+        requirements: 'A todo list with add, delete, and mark complete functionality',
+        framework: 'React',
+        features: ['dark mode', 'local storage', 'responsive design']
+      })
+    });
+    
+    const data = await response.json();
+    console.log('Generated App:', data);
+    return data;
+  } catch (error) {
+    console.error('Error generating app:', error);
+  }
+}
+
+// 2. Analyze Code
+async function analyzeCode() {
+  const sampleCode = `
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+  
+  const addTodo = () => {
+    setTodos([...todos, { id: Date.now(), text: input, done: false }]);
+    setInput('');
+  };
+  
+  return (
+    <div>
+      <input value={input} onChange={(e) => setInput(e.target.value)} />
+      <button onClick={addTodo}>Add</button>
+      {todos.map(todo => <div key={todo.id}>{todo.text}</div>)}
+    </div>
+  );
+}`;
+
+  try {
+    const response = await fetch(`${API_BASE}?endpoint=analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        code: sampleCode,
+        analysisType: 'full'
+      })
+    });
+    
+    const data = await response.json();
+    console.log('Code Analysis:', data);
+    return data;
+  } catch (error) {
+    console.error('Error analyzing code:', error);
+  }
+}
+
+// 3. Optimize Code
+async function optimizeCode() {
+  const sampleCode = `
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+  
+  const addTodo = () => {
+    setTodos([...todos, { id: Date.now(), text: input, done: false }]);
+    setInput('');
+  };
+  
+  return (
+    <div>
+      <input value={input} onChange={(e) => setInput(e.target.value)} />
+      <button onClick={addTodo}>Add</button>
+      {todos.map(todo => <div key={todo.id}>{todo.text}</div>)}
+    </div>
+  );
+}`;
+
+  try {
+    const response = await fetch(`${API_BASE}?endpoint=optimize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        code: sampleCode,
+        optimizationType: 'performance'
+      })
+    });
+    
+    const data = await response.json();
+    console.log('Optimized Code:', data);
+    return data;
+  } catch (error) {
+    console.error('Error optimizing code:', error);
+  }
+}
+
+// 4. Get Suggestions
+async function getSuggestions() {
+  try {
+    const response = await fetch(`${API_BASE}?endpoint=suggest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        context: 'building a React todo app',
+        category: 'components'
+      })
+    });
+    
+    const data = await response.json();
+    console.log('Suggestions:', data);
+    return data;
+  } catch (error) {
+    console.error('Error getting suggestions:', error);
+  }
+}
+
+// Run all examples
+async function runAllExamples() {
+  console.log('🚀 Testing AI App Builder API...\n');
+  
+  console.log('1. Generating app...');
+  await generateApp();
+  
+  console.log('\n2. Analyzing code...');
+  await analyzeCode();
+  
+  console.log('\n3. Optimizing code...');
+  await optimizeCode();
+  
+  console.log('\n4. Getting suggestions...');
+  await getSuggestions();
+  
+  console.log('\n✅ All tests completed!');
+}
+
+// Run the examples
+runAllExamples();

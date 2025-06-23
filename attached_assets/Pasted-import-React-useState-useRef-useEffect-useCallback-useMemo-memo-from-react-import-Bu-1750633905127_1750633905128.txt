@@ -1,0 +1,653 @@
+import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Send, Code, FileText, Zap, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import TypingAnimation from '@/components/ui/typing-animation';
+import LoadingAnimation from '@/components/ui/loading-animation';
+import CodeStream from '@/components/ui/code-stream';
+import { Project } from '@/lib/file-system';
+import { useProjects } from '@/hooks/useProjects';
+import { useAuth } from '@/hooks/useAuth';
+
+// Types and Interfaces
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+  type?: 'analysis' | 'code' | 'normal' | 'error';
+  metadata?: {
+    filesGenerated?: string[];
+    language?: string;
+    stage?: string;
+  };
+}
+
+interface ChatInterfaceProps {
+  project: Project;
+  onConsoleLog: (message: string, type?: 'success' | 'error' | 'info') => void;
+  onAppUpdate?: (htmlContent: string) => void;
+  onFileGenerated?: (fileName: string, content: string, language: string) => void;
+}
+
+interface GenerationStage {
+  id: string;
+  name: string;
+  description: string;
+  progress: number;
+}
+
+interface LiveCodingState {
+  fileName: string;
+  content: string;
+  isActive: boolean;
+  language: string;
+  progress: number;
+}
+
+interface APIResponse {
+  response: string;
+  success: boolean;
+  error?: string;
+  metadata?: Record<string, any>;
+}
+
+// Constants
+const INITIAL_MESSAGE: ChatMessage = {
+  id: '1',
+  sender: 'ai',
+  content: 'I create complete applications with 13+ files in multiple programming languages. Describe what you want to build and I\'ll generate a comprehensive project structure.',
+  timestamp: new Date(),
+  type: 'normal'
+};
+
+const GENERATION_STAGES: GenerationStage[] = [
+  { id: 'analyze', name: 'Analyzing Requirements', description: 'Understanding your project needs', progress: 0 },
+  { id: 'design', name: 'Designing Architecture', description: 'Creating multi-language structure', progress: 25 },
+  { id: 'generate', name: 'Generating Files', description: 'Creating comprehensive codebase', progress: 50 },
+  { id: 'optimize', name: 'Optimizing Code', description: 'Applying best practices', progress: 75 },
+  { id: 'finalize', name: 'Finalizing Project', description: 'Completing setup', progress: 100 }
+];
+
+const TYPING_SPEED = 8; // milliseconds per chunk
+const CHUNK_SIZE = 15; // characters per chunk
+
+// Custom Hooks
+const useAutoScroll = (dependency: any[]) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, dependency);
+  
+  return messagesEndRef;
+};
+
+const useKeyboardShortcuts = (onSubmit: () => void, disabled: boolean) => {
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !disabled) {
+        e.preventDefault();
+        onSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [onSubmit, disabled]);
+};
+
+// Utility Functions
+const getLanguageExtension = (language: string): string => {
+  const extensions: Record<string, string> = {
+    javascript: 'js',
+    typescript: 'ts',
+    python: 'py',
+    css: 'css',
+    html: 'html',
+    json: 'json',
+    jsx: 'jsx',
+    tsx: 'tsx',
+    scss: 'scss',
+    less: 'less',
+    sql: 'sql',
+    yaml: 'yml',
+    markdown: 'md'
+  };
+  return extensions[language] || 'txt';
+};
+
+const parseCodeBlocks = (content: string): Array<{ language: string; code: string; fileName: string }> => {
+  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  const blocks: Array<{ language: string; code: string; fileName: string }> = [];
+  let match;
+  let index = 0;
+
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    const language = match[1] || 'text';
+    const code = match[2].trim();
+    const extension = getLanguageExtension(language);
+    const fileName = `generated_file_${index + 1}.${extension}`;
+    
+    blocks.push({ language, code, fileName });
+    index++;
+  }
+
+  return blocks;
+};
+
+const formatTimestamp = (timestamp: Date): string => {
+  return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+// Component: Message Icon
+const MessageIcon = memo(({ type }: { type?: string }) => {
+  const iconProps = { className: "w-4 h-4" };
+  
+  switch (type) {
+    case 'analysis': return <Zap {...iconProps} className="w-4 h-4 text-blue-500" />;
+    case 'code': return <Code {...iconProps} className="w-4 h-4 text-green-500" />;
+    case 'error': return <AlertCircle {...iconProps} className="w-4 h-4 text-red-500" />;
+    default: return <FileText {...iconProps} className="w-4 h-4 text-gray-500" />;
+  }
+});
+
+// Component: Generation Progress
+const GenerationProgress = memo(({ currentStage, progress }: { currentStage: string; progress: number }) => (
+  <div className="space-y-3">
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium">{currentStage}</span>
+      <span className="text-xs text-gray-500">{progress}%</span>
+    </div>
+    <div className="w-full bg-gray-200 rounded-full h-2">
+      <div 
+        className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  </div>
+));
+
+// Component: Live Coding Display
+const LiveCodingDisplay = memo(({ liveCoding }: { liveCoding: LiveCodingState }) => {
+  if (!liveCoding.isActive) return null;
+
+  return (
+    <div className="flex justify-start">
+      <Card className="max-w-[90%] p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Code className="w-4 h-4 text-green-500" />
+          <span className="text-sm font-medium">{liveCoding.fileName}</span>
+          <Badge variant="outline" className="text-xs">
+            {liveCoding.language} • Live Coding
+          </Badge>
+          <div className="ml-auto text-xs text-gray-500">
+            {liveCoding.progress}%
+          </div>
+        </div>
+        <div className="bg-gray-900 text-green-400 p-3 rounded text-xs font-mono overflow-x-auto max-h-64">
+          <TypingAnimation 
+            text={liveCoding.content} 
+            speed={1} 
+            className="whitespace-pre"
+          />
+        </div>
+      </Card>
+    </div>
+  );
+});
+
+// Component: Chat Message
+const ChatMessage = memo(({ message }: { message: ChatMessage }) => (
+  <div className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`max-w-[80%] ${
+      message.sender === 'user'
+        ? 'bg-blue-500 text-white'
+        : message.type === 'error'
+        ? 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100 border border-red-200 dark:border-red-800'
+        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+    } rounded-lg p-3 shadow-sm transition-all duration-200 hover:shadow-md`}>
+      <div className="flex items-center gap-2 mb-1">
+        {message.sender === 'ai' && <MessageIcon type={message.type} />}
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {formatTimestamp(message.timestamp)}
+        </span>
+        {message.type && (
+          <Badge variant="outline" className="text-xs">
+            {message.type}
+          </Badge>
+        )}
+        {message.metadata?.filesGenerated && (
+          <Badge variant="secondary" className="text-xs">
+            {message.metadata.filesGenerated.length} files
+          </Badge>
+        )}
+      </div>
+      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+        {message.content}
+      </div>
+    </div>
+  </div>
+));
+
+// Main Component
+export default function ChatInterface({ 
+  project, 
+  onConsoleLog, 
+  onAppUpdate, 
+  onFileGenerated 
+}: ChatInterfaceProps) {
+  // Hooks
+  const { createProject } = useProjects();
+  const { user } = useAuth();
+  
+  // State
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentStageIndex, setCurrentStageIndex] = useState(0);
+  const [liveCoding, setLiveCoding] = useState<LiveCodingState>({
+    fileName: '',
+    content: '',
+    isActive: false,
+    language: '',
+    progress: 0
+  });
+  const [isGenerationMode, setIsGenerationMode] = useState(true);
+  const [generationComplete, setGenerationComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useAutoScroll([messages, isLoading, liveCoding]);
+
+  // Computed values
+  const currentStage = useMemo(() => 
+    GENERATION_STAGES[currentStageIndex] || GENERATION_STAGES[0], 
+    [currentStageIndex]
+  );
+
+  const canSubmit = useMemo(() => 
+    !isLoading && inputValue.trim().length > 0, 
+    [isLoading, inputValue]
+  );
+
+  // Auto-start handler
+  useEffect(() => {
+    const handleAutoStart = (event: CustomEvent) => {
+      if (event.detail?.prompt) {
+        handleSubmit(event.detail.prompt);
+      }
+    };
+
+    window.addEventListener('autoStartGeneration' as any, handleAutoStart);
+    return () => window.removeEventListener('autoStartGeneration' as any, handleAutoStart);
+  }, []);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts(() => handleSubmit(), !canSubmit);
+
+  // API call with retry logic
+  const makeAPICall = async (endpoint: string, data: any, retries: number = 3): Promise<APIResponse> => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        return { ...result, success: true };
+      } catch (error) {
+        if (attempt === retries) {
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+    throw new Error('Max retries exceeded');
+  };
+
+  // Enhanced typing simulation
+  const simulateTyping = useCallback(async (
+    code: string, 
+    fileName: string, 
+    language: string
+  ): Promise<void> => {
+    const chunks = code.split('');
+    let currentContent = '';
+    
+    for (let i = 0; i < chunks.length; i += CHUNK_SIZE) {
+      currentContent += chunks.slice(i, i + CHUNK_SIZE).join('');
+      const progress = Math.round((i / chunks.length) * 100);
+      
+      setLiveCoding(prev => ({
+        ...prev,
+        fileName,
+        content: currentContent,
+        language,
+        progress,
+        isActive: true
+      }));
+      
+      await new Promise(resolve => setTimeout(resolve, TYPING_SPEED));
+    }
+  }, []);
+
+  // Enhanced file generation
+  const processGeneratedFiles = useCallback(async (
+    response: string,
+    userInput: string
+  ): Promise<string[]> => {
+    const codeBlocks = parseCodeBlocks(response);
+    const filesCreated: string[] = [];
+
+    if (codeBlocks.length === 0) {
+      onConsoleLog('No code blocks found in response', 'info');
+      return filesCreated;
+    }
+
+    onConsoleLog(`Processing ${codeBlocks.length} generated files...`, 'info');
+
+    for (const [index, block] of codeBlocks.entries()) {
+      try {
+        if (onFileGenerated) {
+          onFileGenerated(block.fileName, block.code, block.language);
+        }
+        
+        filesCreated.push(block.fileName);
+        await simulateTyping(block.code, block.fileName, block.language);
+        
+        // Brief pause between files
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Error processing file ${block.fileName}:`, error);
+        onConsoleLog(`Error processing ${block.fileName}`, 'error');
+      }
+    }
+
+    return filesCreated;
+  }, [onFileGenerated, simulateTyping, onConsoleLog]);
+
+  // Enhanced project saving
+  const saveProject = useCallback(async (
+    filesCreated: string[],
+    codeBlocks: Array<{ language: string; code: string; fileName: string }>,
+    userInput: string
+  ): Promise<void> => {
+    if (!user || filesCreated.length === 0) return;
+
+    try {
+      const projectFiles: Record<string, { content: string; type: string }> = {};
+      
+      codeBlocks.forEach((block, index) => {
+        if (filesCreated[index]) {
+          projectFiles[filesCreated[index]] = {
+            content: block.code,
+            type: block.language
+          };
+        }
+      });
+
+      await createProject({
+        name: `Generated App ${new Date().toLocaleDateString()}`,
+        description: `AI-generated application from prompt: ${userInput.substring(0, 100)}...`,
+        prompt: userInput,
+        language: 'multi-language',
+        files: projectFiles
+      });
+
+      onConsoleLog('Project automatically saved to dashboard', 'success');
+    } catch (error) {
+      console.error('Error saving project:', error);
+      onConsoleLog('Failed to save project', 'error');
+    }
+  }, [user, createProject, onConsoleLog]);
+
+  // Enhanced AI response handler
+  const handleAIResponse = useCallback(async (userInput: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    setCurrentStageIndex(0);
+
+    try {
+      if (isGenerationMode && !generationComplete) {
+        // File generation mode with enhanced progress tracking
+        for (let i = 0; i < GENERATION_STAGES.length - 1; i++) {
+          setCurrentStageIndex(i);
+          onConsoleLog(GENERATION_STAGES[i].description, 'info');
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        setCurrentStageIndex(GENERATION_STAGES.length - 1);
+        setLiveCoding(prev => ({ ...prev, isActive: true }));
+
+        const data = await makeAPICall('/api/ask', { prompt: userInput });
+        const aiResponse = data.response || "I'd be happy to help! Could you provide more specific details about what you want me to build?";
+
+        const codeBlocks = parseCodeBlocks(aiResponse);
+        const filesCreated = await processGeneratedFiles(aiResponse, userInput);
+
+        // End live coding
+        setLiveCoding(prev => ({ ...prev, isActive: false }));
+
+        if (isGenerationMode) {
+          setGenerationComplete(true);
+          setIsGenerationMode(false);
+          
+          // Save project
+          await saveProject(filesCreated, codeBlocks, userInput);
+          
+          const completionMessage: ChatMessage = {
+            id: Date.now().toString(),
+            sender: 'ai',
+            content: `🎉 Project generation complete! Created ${filesCreated.length} professional files with advanced architecture.\n\n${user ? '✅ Project automatically saved to your dashboard.' : '💡 Sign in to save your projects and access them later.'}\n\n🚀 I'm now in chat mode. Ask me about:\n• Code explanations and modifications\n• Architecture decisions\n• Feature enhancements\n• Deployment strategies\n• Best practices and optimizations`,
+            timestamp: new Date(),
+            type: 'analysis',
+            metadata: {
+              filesGenerated: filesCreated,
+              stage: 'complete'
+            }
+          };
+          
+          setMessages(prev => [...prev, completionMessage]);
+          onConsoleLog('Switched to chat mode for follow-up questions', 'success');
+        }
+      } else {
+        // Enhanced chat mode
+        const data = await makeAPICall('/api/chat', { message: userInput });
+        
+        const aiMessage: ChatMessage = {
+          id: Date.now().toString(),
+          sender: 'ai',
+          content: data.response,
+          timestamp: new Date(),
+          type: 'normal'
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+      }
+      
+      onConsoleLog('Processing completed successfully!', 'success');
+    } catch (error) {
+      console.error('AI Response Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(errorMessage);
+      
+      const errorChatMessage: ChatMessage = {
+        id: Date.now().toString() + '_error',
+        sender: 'ai',
+        content: `I encountered an error while processing your request: ${errorMessage}\n\nPlease try again or provide more specific details about what you'd like me to build.`,
+        timestamp: new Date(),
+        type: 'error'
+      };
+      
+      setMessages(prev => [...prev, errorChatMessage]);
+      onConsoleLog(`Error: ${errorMessage}`, 'error');
+    } finally {
+      setIsLoading(false);
+      setCurrentStageIndex(0);
+      setLiveCoding(prev => ({ ...prev, isActive: false }));
+    }
+  }, [
+    isGenerationMode, 
+    generationComplete, 
+    onConsoleLog, 
+    processGeneratedFiles, 
+    saveProject
+  ]);
+
+  // Enhanced submit handler
+  const handleSubmit = useCallback(async (message: string = inputValue): Promise<void> => {
+    if (!message.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      sender: 'user',
+      content: message.trim(),
+      timestamp: new Date(),
+      type: 'normal'
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    
+    // Focus input after submit
+    setTimeout(() => inputRef.current?.focus(), 100);
+
+    await handleAIResponse(message.trim());
+  }, [inputValue, isLoading, handleAIResponse]);
+
+  // Render
+  return (
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+      {/* Enhanced Header */}
+      <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              AI Assistant
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {isGenerationMode && !generationComplete ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  Project Generation Mode
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  Chat Mode
+                </span>
+              )}
+            </p>
+          </div>
+          {isLoading && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+              <span className="text-sm text-blue-700 dark:text-blue-300">Processing</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert className="m-4 border-red-200 bg-red-50 dark:bg-red-900/20">
+          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertDescription className="text-red-700 dark:text-red-300">
+            {error}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-2 h-6 px-2 text-red-700 hover:text-red-900"
+              onClick={() => setError(null)}
+            >
+              Dismiss
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Enhanced Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <ChatMessage key={message.id} message={message} />
+        ))}
+        
+        {/* Enhanced Loading States */}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 min-w-[300px]">
+              <GenerationProgress 
+                currentStage={currentStage.name} 
+                progress={currentStage.progress} 
+              />
+              <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                {currentStage.description}
+              </div>
+              <LoadingAnimation stage={currentStage.name} isVisible={isLoading} />
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Live Coding Display */}
+        <LiveCodingDisplay liveCoding={liveCoding} />
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Enhanced Input */}
+      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
+        <div className="flex gap-2">
+          <div className="flex-1 relative">
+            <Input
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={
+                isGenerationMode && !generationComplete
+                  ? "Describe the application you want to build..."
+                  : "Ask me about the code, request modifications, or discuss features..."
+              }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              disabled={isLoading}
+              className="pr-20"
+              maxLength={1000}
+            />
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
+              {inputValue.length}/1000
+            </div>
+          </div>
+          <Button 
+            onClick={() => handleSubmit()} 
+            disabled={!canSubmit}
+            size="icon"
+            className="transition-all duration-200"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          Press Enter to send • Ctrl+Enter for quick send • Max 1000 characters
+        </div>
+      </div>
+    </div>
+  );
+}

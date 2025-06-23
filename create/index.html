@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI App Builder - Replit Clone</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f1419;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #1a1f2e;
+            border-bottom: 1px solid #2d3748;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            height: 60px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 18px;
+            color: #ffffff;
+        }
+        
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            background: #3b82f6;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn {
+            background: none;
+            border: 1px solid #374151;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn:hover {
+            background: #374151;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            border-color: #10b981;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .landing-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        
+        .landing-title {
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .input-container {
+            width: 100%;
+            max-width: 600px;
+            background: #1a1f2e;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .input-field {
+            width: 100%;
+            background: #0f1419;
+            border: 1px solid #374151;
+            color: #ffffff;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .input-field::placeholder {
+            color: #6b7280;
+        }
+        
+        .input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+        
+        .ai-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .suggestions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+        
+        .suggestion-chip {
+            background: #1a1f2e;
+            border: 1px solid #374151;
+            color: #9ca3af;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .suggestion-chip:hover {
+            background: #374151;
+            color: #ffffff;
+        }
+        
+        .ide-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #1a1f2e;
+            border-right: 1px solid #374151;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .sidebar-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .file-list {
+            flex: 1;
+            padding: 8px;
+            overflow-y: auto;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .file-item:hover {
+            background: #374151;
+        }
+        
+        .file-item.active {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+        
+        .file-icon {
+            width: 16px;
+            height: 16px;
+            color: #6b7280;
+        }
+        
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-tabs {
+            background: #1a1f2e;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            min-height: 40px;
+        }
+        
+        .editor-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-right: 1px solid #374151;
+            cursor: pointer;
+            font-size: 14px;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            transition: all 0.2s;
+        }
+        
+        .editor-tab.active {
+            background: #374151;
+            color: #ffffff;
+        }
+        
+        .editor-tab:hover {
+            background: #374151;
+        }
+        
+        .close-tab {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            border: none;
+            background: none;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-tab:hover {
+            background: #ef4444;
+            color: #ffffff;
+        }
+        
+        .editor {
+            flex: 1;
+            background: #0f1419;
+            color: #ffffff;
+            border: none;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+        }
+        
+        .right-panel {
+            width: 400px;
+            background: #1a1f2e;
+            border-left: 1px solid #374151;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .panel-tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .panel-tab.active {
+            background: #374151;
+            color: #ffffff;
+            border-bottom: 2px solid #3b82f6;
+        }
+        
+        .panel-tab:hover {
+            background: #374151;
+        }
+        
+        .panel-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-container {
+            flex: 1;
+            background: #ffffff;
+            margin: 16px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .message {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            background: #3b82f6;
+        }
+        
+        .ai-avatar {
+            background: #374151;
+        }
+        
+        .message-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .message-sender {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        
+        .chat-input {
+            padding: 16px;
+            border-top: 1px solid #374151;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chat-input-field {
+            flex: 1;
+            background: #0f1419;
+            border: 1px solid #374151;
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .chat-input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .chat-input-field::placeholder {
+            color: #6b7280;
+        }
+        
+        .console-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .console-header {
+            padding: 16px;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .console-output {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .console-line {
+            margin-bottom: 4px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .console-timestamp {
+            color: #6b7280;
+            min-width: 80px;
+        }
+        
+        .console-message {
+            flex: 1;
+        }
+        
+        .console-success {
+            color: #10b981;
+        }
+        
+        .console-error {
+            color: #ef4444;
+        }
+        
+        .console-info {
+            color: #3b82f6;
+        }
+        
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #374151;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .file-action {
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: none;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .file-action:hover {
+            background: #374151;
+            color: #ffffff;
+        }
+        
+        .delete-file:hover {
+            background: #ef4444;
+            color: #ffffff;
+        }
+        
+        .no-preview {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .no-preview-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #10b981;
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { 
+            Box, ArrowLeft, Play, Share, Plus, FolderPlus, Eye, Terminal, MessageSquare, 
+            RefreshCw, Trash, FileText, X, Bot, User, Send, Sparkles, Bell, Settings,
+            Calculator, Dumbbell, Leaf, ArrowRight
+        } = lucideReact;
+
+        // File system utilities
+        const getFileIcon = (fileName) => {
+            const ext = fileName.split('.').pop()?.toLowerCase();
+            return FileText; // Simplified for this demo
+        };
+
+        const createDefaultProject = (name, description = '') => {
+            // AI-powered project type detection and file generation
+            const keywords = description.toLowerCase();
+            
+            // Determine project type and generate appropriate files
+            if (keywords.includes('react') || keywords.includes('component') || keywords.includes('jsx')) {
+                return {
+                    name,
+                    files: {
+                        'App.jsx': {
+                            content: getLanguageTemplate('App.jsx', name),
+                            type: 'jsx'
+                        },
+                        'index.html': {
+                            content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${name}</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel" src="App.jsx"></script>
+</body>
+</html>`,
+                            type: 'html'
+                        },
+                        'styles.css': {
+                            content: getLanguageTemplate('style.css', name),
+                            type: 'css'
+                        }
+                    }
+                };
+            } else if (keywords.includes('python') || keywords.includes('data') || keywords.includes('ml') || keywords.includes('ai')) {
+                return {
+                    name,
+                    files: {
+                        'main.py': {
+                            content: getLanguageTemplate('main.py', name),
+                            type: 'py'
+                        },
+                        'requirements.txt': {
+                            content: '# Python dependencies for ' + name + '\nrequests>=2.25.0\nnumpy>=1.21.0\npandas>=1.3.0\nmatplotlib>=3.3.0\nseaborn>=0.11.0',
+                            type: 'txt'
+                        },
+                        'README.md': {
+                            content: getLanguageTemplate('README.md', name),
+                            type: 'md'
+                        }
+                    }
+                };
+            } else if (keywords.includes('api') || keywords.includes('server') || keywords.includes('backend')) {
+                return {
+                    name,
+                    files: {
+                        'server.js': {
+                            content: `// ${name} - Express.js Server
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+
+// Routes
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', message: '${name} server is running!' });
+});
+
+app.get('/api/data', (req, res) => {
+    res.json({ 
+        message: 'Hello from ${name}!',
+        timestamp: new Date().toISOString(),
+        data: [1, 2, 3, 4, 5]
+    });
+});
+
+app.post('/api/data', (req, res) => {
+    console.log('Received data:', req.body);
+    res.json({ success: true, received: req.body });
+});
+
+app.listen(PORT, () => {
+    console.log(\`🚀 ${name} server running on port \${PORT}\`);
+});`,
+                            type: 'js'
+                        },
+                        'package.json': {
+                            content: getLanguageTemplate('package.json', name),
+                            type: 'json'
+                        },
+                        'README.md': {
+                            content: getLanguageTemplate('README.md', name),
+                            type: 'md'
+                        }
+                    }
+                };
+            } else {
+                // Default web application
+                return {
+                    name,
+                    files: {
+                        'index.html': {
+                            content: getLanguageTemplate('index.html', name),
+                            type: 'html'
+                        }e),
+                            type: 'html'
+                        },
+                        'style.css': {
+                            content: getLanguageTemplate('style.css', name),
+                            type: 'css'
+                        },
+                        'script.js': {
+                            content: getLanguageTemplate('script.js', name),
+                            type: 'js'
+                        },
+                        'README.md': {
+                            content: getLanguageTemplate('README.md', name),
+                            type: 'md'
+                        }
+                    }
+                };
+            }
+        };
+
+        // Enhanced file system with more languages and better code generation
+        const getLanguageTemplate = (fileName, projectName) => {
+            const ext = fileName.split('.').pop()?.toLowerCase();
+            const templates = {
+                'html': () => `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${projectName}</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>Welcome to ${projectName}</h1>
+            <nav>
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </header>
+        <main>
+            <section id="hero">
+                <h2>Built with AI</h2>
+                <p>This application was created using artificial intelligence.</p>
+                <button onclick="handleClick()" class="cta-button">Get Started</button>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2024 ${projectName}. Made with AI.</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>`,
+                'css': () => `/* Modern CSS for ${projectName} */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.app {
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+nav {
+    display: flex;
+    gap: 2rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    transition: opacity 0.3s;
+}
+
+nav a:hover {
+    opacity: 0.7;
+}
+
+main {
+    flex: 1;
+    padding: 4rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#hero {
+    text-align: center;
+    color: white;
+    max-width: 600px;
+}
+
+#hero h2 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#hero p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.cta-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.cta-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+footer {
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    text-align: center;
+    padding: 1rem;
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    #hero h2 {
+        font-size: 2rem;
+    }
+    
+    main {
+        padding: 2rem 1rem;
+    }
+}`,
+                'js': () => `// JavaScript for ${projectName}
+console.log('🚀 ${projectName} initialized successfully!');
+
+// Main application logic
+class App {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        console.log('Initializing app...');
+        document.addEventListener('DOMContentLoaded', () => {
+            this.setupEventListeners();
+            this.loadContent();
+        });
+    }
+
+    setupEventListeners() {
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a[href^="#"]').forEach(link => {
+            link.addEventListener('click', this.handleNavClick.bind(this));
+        });
+
+        // Button animations
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', this.handleButtonClick.bind(this));
+        });
+    }
+
+    handleNavClick(e) {
+        e.preventDefault();
+        const target = document.querySelector(e.target.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    handleButtonClick(e) {
+        e.target.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            e.target.style.transform = 'scale(1)';
+        }, 150);
+    }
+
+    loadContent() {
+        // Dynamic content loading
+        console.log('Content loaded successfully');
+    }
+}
+
+// Global functions
+function handleClick() {
+    showNotification('Button clicked! 🎉', 'success');
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    notification.style.cssText = \`
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        background: \${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    \`;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Initialize app
+const app = new App();
+
+// Add CSS for notifications
+const style = document.createElement('style');
+style.textContent = \`
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+\`;
+document.head.appendChild(style);`,
+                'py': () => `#!/usr/bin/env python3
+"""
+${projectName} - Python Application
+Generated by AI App Builder
+"""
+
+import os
+import sys
+from datetime import datetime
+
+class ${projectName.replace(/[^a-zA-Z0-9]/g, '')}App:
+    def __init__(self):
+        self.name = "${projectName}"
+        self.version = "1.0.0"
+        self.created_at = datetime.now()
+        
+    def run(self):
+        """Main application entry point"""
+        print(f"🚀 Starting {self.name} v{self.version}")
+        print(f"Created: {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        while True:
+            self.show_menu()
+            choice = input("Enter your choice: ").strip()
+            
+            if choice == '1':
+                self.feature_one()
+            elif choice == '2':
+                self.feature_two()
+            elif choice == '3':
+                self.settings()
+            elif choice == '0':
+                print("Thanks for using ${projectName}!")
+                break
+            else:
+                print("Invalid choice. Please try again.")
+    
+    def show_menu(self):
+        """Display main menu"""
+        print("\\n" + "="*50)
+        print(f"  {self.name}")
+        print("="*50)
+        print("1. Feature One")
+        print("2. Feature Two") 
+        print("3. Settings")
+        print("0. Exit")
+        print("-"*50)
+    
+    def feature_one(self):
+        """First main feature"""
+        print("\\n✨ Feature One activated!")
+        # Add your feature implementation here
+        
+    def feature_two(self):
+        """Second main feature"""
+        print("\\n🎯 Feature Two activated!")
+        # Add your feature implementation here
+        
+    def settings(self):
+        """Application settings"""
+        print("\\n⚙️  Settings")
+        print(f"App Name: {self.name}")
+        print(f"Version: {self.version}")
+        print(f"Created: {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+
+def main():
+    """Main function"""
+    try:
+        app = ${projectName.replace(/[^a-zA-Z0-9]/g, '')}App()
+        app.run()
+    except KeyboardInterrupt:
+        print("\\n\\nApplication interrupted by user.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()`,
+                'jsx': () => `import React, { useState, useEffect } from 'react';
+import './App.css';
+
+// ${projectName} - React Application
+const App = () => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [message, setMessage] = useState('Welcome to ${projectName}');
+
+    useEffect(() => {
+        console.log('🚀 ${projectName} React app initialized');
+        setIsLoaded(true);
+    }, []);
+
+    const handleButtonClick = () => {
+        setMessage('Button clicked! React is working perfectly! 🎉');
+    };
+
+    return (
+        <div className="app">
+            <header className="app-header">
+                <h1>${projectName}</h1>
+                <nav>
+                    <a href="#home">Home</a>
+                    <a href="#about">About</a>
+                    <a href="#contact">Contact</a>
+                </nav>
+            </header>
+            
+            <main className="app-main">
+                <section className="hero">
+                    <h2>Built with React & AI</h2>
+                    <p>{message}</p>
+                    <button 
+                        className="cta-button"
+                        onClick={handleButtonClick}
+                        disabled={!isLoaded}
+                    >
+                        {isLoaded ? 'Get Started' : 'Loading...'}
+                    </button>
+                </section>
+            </main>
+            
+            <footer className="app-footer">
+                <p>&copy; 2024 ${projectName}. Made with React & AI.</p>
+            </footer>
+        </div>
+    );
+};
+
+export default App;`,
+                'json': () => `{
+  "name": "${projectName}",
+  "version": "1.0.0",
+  "description": "AI-generated application",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "build": "webpack --mode production"
+  },
+  "keywords": ["ai", "generated", "app"],
+  "author": "AI App Builder",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.0",
+    "jest": "^29.0.0"
+  }
+}`,
+                'md': () => `# ${projectName}
+
+Welcome to **${projectName}** - an AI-generated application!
+
+## Features
+
+- ✨ Built with artificial intelligence
+- 🚀 Modern and responsive design
+- 📱 Mobile-friendly interface
+- ⚡ Fast and efficient
+
+## Getting Started
+
+1. Open the application
+2. Explore the features
+3. Customize as needed
+
+## Usage
+
+This application provides a clean, modern interface for your needs. The AI has generated a solid foundation that you can build upon.
+
+### Quick Start
+
+\`\`\`bash
+# If this is a web app
+open index.html
+
+# If this is a Node.js app
+npm install
+npm start
+\`\`\`
+
+## Customization
+
+Feel free to modify any part of this application to suit your specific requirements. The AI has created a flexible structure that's easy to extend.
+
+## Features Breakdown
+
+### User Interface
+- Clean, modern design
+- Responsive layout
+- Interactive elements
+
+### Functionality
+- Core features implemented
+- Extensible architecture
+- Well-commented code
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with AI assistance
+- Designed for modern web standards
+- Optimized for user experience
+
+---
+
+*Generated by AI App Builder - Building the future, one app at a time!*`
+            };
+            
+            return templates[ext] ? templates[ext]() : `// ${fileName}\n// Generated by AI App Builder\n\nconsole.log('Hello from ${fileName}!');`;
+        };
+
+        // Main App Component
+        function App() {
+            const [currentView, setCurrentView] = useState('landing');
+            const [project, setProject] = useState(null);
+            const [projectDescription, setProjectDescription] = useState('');
+
+            const handleStartChat = () => {
+                if (projectDescription.trim()) {
+                    const projectName = projectDescription.length > 30 
+                        ? projectDescription.substring(0, 30).trim() + '...'
+                        : projectDescription.trim();
+                    const newProject = createDefaultProject(projectName, projectDescription);
+                    setProject(newProject);
+                    setCurrentView('ide');
+                }
+            };
+
+            const handleBackToLanding = () => {
+                setCurrentView('landing');
+                setProject(null);
+                setProjectDescription('');
+            };
+
+            return (
+                <div className="app-container">
+                    {currentView === 'landing' ? (
+                        <LandingPage 
+                            description={projectDescription}
+                            setDescription={setProjectDescription}
+                            onStartChat={handleStartChat}
+                        />
+                    ) : (
+                        <IDE 
+                            project={project}
+                            setProject={setProject}
+                            onBackToLanding={handleBackToLanding}
+                            initialDescription={projectDescription}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        // Landing Page Component
+        function LandingPage({ description, setDescription, onStartChat }) {
+            const suggestions = [
+                { text: 'Todo list app with React', icon: Calculator },
+                { text: 'Weather dashboard with API', icon: Dumbbell },
+                { text: 'Portfolio website', icon: Leaf },
+                { text: 'E-commerce store', icon: FileText },
+                { text: 'Blog with CMS', icon: Eye },
+                { text: 'Chat application', icon: Box },
+                { text: 'Data visualization tool', icon: Calculator },
+                { text: 'Task management system', icon: FileText }
+            ];
+
+            const handleSuggestionClick = (suggestion) => {
+                setDescription(suggestion);
+            };
+
+            return (
+                <>
+                    <div className="header">
+                        <div className="header-left">
+                            <div className="logo">
+                                <div className="logo-icon">
+                                    <Box size={16} color="white" />
+                                </div>
+                                AI App Builder
+                            </div>
+                        </div>
+                        <div className="header-right">
+                            <button className="btn">
+                                <Bell size={16} />
+                            </button>
+                            <button className="btn">
+                                <Settings size={16} />
+                            </button>
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                background: '#3b82f6',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '600',
+                                fontSize: '14px'
+                            }}>
+                                V
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="main-content">
+                        <div className="landing-container">
+                            <h1 className="landing-title">Hi VIRAAJ, what do you want to make?</h1>
+                            
+                            <div className="input-container">
+                                <textarea
+                                    className="input-field"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Describe an app or site you want to create..."
+                                />
+                                <div className="input-footer">
+                                    <div className="ai-indicator">
+                                        <Sparkles size={16} />
+                                        AI will help you build this
+                                    </div>
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={onStartChat}
+                                        disabled={!description.trim()}
+                                    >
+                                        Start Chat
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="suggestions">
+                                {suggestions.map((suggestion, index) => (
+                                    <button
+                                        key={index}
+                                        className="suggestion-chip"
+                                        onClick={() => handleSuggestionClick(suggestion.text)}
+                                    >
+                                        <suggestion.icon size={16} />
+                                        {suggestion.text}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="input-container" style={{ maxWidth: '600px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                    <h3 style={{ margin: 0 }}>Your recent Apps</h3>
+                                    <button className="btn" style={{ padding: '4px 8px', fontSize: '12px' }}>
+                                        View All <ArrowRight size={14} />
+                                    </button>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#374151', borderRadius: '8px', cursor: 'pointer' }}>
+                                    <div style={{ width: '40px', height: '40px', background: '#3b82f6', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Box size={20} color="white" />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: '500' }}>AI App Builder</div>
+                                        <div style={{ color: '#9ca3af', fontSize: '14px' }}>2 minutes ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        // IDE Component
+        function IDE({ project, setProject, onBackToLanding, initialDescription }) {
+            const [activeFile, setActiveFile] = useState('index.html');
+            const [openFiles, setOpenFiles] = useState(['index.html']);
+            const [activePanel, setActivePanel] = useState('preview');
+
+            const updateFileContent = (fileName, content) => {
+                setProject(prev => ({
+                    ...prev,
+                    files: {
+                        ...prev.files,
+                        [fileName]: {
+                            ...prev.files[fileName],
+                            content
+                        }
+                    }
+                }));
+            };
+
+            const createFile = () => {
+                const fileName = prompt('Enter file name:');
+                if (fileName && fileName.trim() && !project.files[fileName]) {
+                    const ext = fileName.split('.').pop()?.toLowerCase();
+                    let defaultContent = '';
+                    let fileType = 'text';
+
+                    if (ext === 'html') {
+                        defaultContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${fileName}</title>
+</head>
+<body>
+    <h1>New HTML File</h1>
+</body>
+</html>`;
+                        fileType = 'html';
+                    } else if (ext === 'css') {
+                        defaultContent = `/* Styles for ${fileName} */
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: sans-serif;
+}`;
+                        fileType = 'css';
+                    } else if (ext === 'js') {
+                        defaultContent = `// JavaScript for ${fileName}
+console.log('${fileName} loaded');`;
+                        fileType = 'js';
+                    }
+
+                    setProject(prev => ({
+                        ...prev,
+                        files: {
+                            ...prev.files,
+                            [fileName]: { content: defaultContent, type: fileType }
+                        }
+                    }));
+
+                    if (!openFiles.includes(fileName)) {
+                        setOpenFiles(prev => [...prev, fileName]);
+                    }
+                    setActiveFile(fileName);
+                }
+            };
+
+            const deleteFile = (fileName) => {
+                if (Object.keys(project.files).length <= 1) {
+                    alert('Cannot delete the last file');
+                    return;
+                }
+                
+                if (confirm(`Are you sure you want to delete ${fileName}?`)) {
+                    setProject(prev => {
+                        const newFiles = { ...prev.files };
+                        delete newFiles[fileName];
+                        return { ...prev, files: newFiles };
+                    });
+
+                    setOpenFiles(prev => prev.filter(f => f !== fileName));
+                    
+                    if (activeFile === fileName) {
+                        const remainingFiles = Object.keys(project.files).filter(f => f !== fileName);
+                        setActiveFile(remainingFiles[0] || null);
+                    }
+                }
+            };
+
+            const closeTab = (fileName) => {
+                setOpenFiles(prev => prev.filter(f => f !== fileName));
+                if (activeFile === fileName) {
+                    const remainingFiles = openFiles.filter(f => f !== fileName);
+                    setActiveFile(remainingFiles[0] || null);
+                }
+            };
+
+            const openFile = (fileName) => {
+                if (!openFiles.includes(fileName)) {
+                    setOpenFiles(prev => [...prev, fileName]);
+                }
+                setActiveFile(fileName);
+            };
+
+            return (
+                <>
+                    <div className="header">
+                        <div className="header-left">
+                            <button className="btn" onClick={onBackToLanding}>
+                                <ArrowLeft size={16} />
+                            </button>
+                            <div className="logo">
+                                <div className="logo-icon">
+                                    <Box size={16} color="white" />
+                                </div>
+                                AI App Builder
+                            </div>
+                            <div style={{ color: '#9ca3af', fontSize: '14px' }}>{project.name}</div>
+                        </div>
+                        <div className="header-right">
+                            <div className="status-indicator">
+                                <div className="status-dot"></div>
+                                Ready
+                            </div>
+                            <button className="btn btn-success">
+                                <Play size={16} />
+                                Run
+                            </button>
+                            <button className="btn btn-primary">
+                                <Share size={16} />
+                                Share
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="main-content">
+                        <div className="ide-container">
+                            {/* Sidebar */}
+                            <div className="sidebar">
+                                <div className="sidebar-header">
+                                    <div className="sidebar-title">Files</div>
+                                    <div className="file-actions">
+                                        <button className="file-action" onClick={createFile} title="New File">
+                                            <Plus size={16} />
+                                        </button>
+                                        <button className="file-action" title="New Folder">
+                                            <FolderPlus size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="file-list">
+                                    {Object.keys(project.files).map(fileName => (
+                                        <div
+                                            key={fileName}
+                                            className={`file-item ${fileName === activeFile ? 'active' : ''}`}
+                                            onClick={() => openFile(fileName)}
+                                        >
+                                            <FileText size={16} className="file-icon" />
+                                            <span style={{ flex: 1 }}>{fileName}</span>
+                                            {Object.keys(project.files).length > 1 && (
+                                                <button
+                                                    className="file-action delete-file"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        deleteFile(fileName);
+                                                    }}
+                                                    title="Delete File"
+                                                >
+                                                    <Trash size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Editor Area */}
+                            <div className="editor-area">
+                                <div className="editor-tabs">
+                                    {openFiles.map(fileName => (
+                                        <button
+                                            key={fileName}
+                                            className={`editor-tab ${fileName === activeFile ? 'active' : ''}`}
+                                            onClick={() => setActiveFile(fileName)}
+                                        >
+                                            <FileText size={16} />
+                                            {fileName}
+                                            <button
+                                                className="close-tab"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    closeTab(fileName);
+                                                }}
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </button>
+                                    ))}
+                                </div>
+                                
+                                <textarea
+                                    className="editor"
+                                    value={activeFile ? project.files[activeFile]?.content || '' : ''}
+                                    onChange={(e) => activeFile && updateFileContent(activeFile, e.target.value)}
+                                    placeholder={activeFile ? `Edit ${activeFile}...` : 'Select a file to start coding...'}
+                                />
+                            </div>
+
+                            {/* Right Panel */}
+                            <div className="right-panel">
+                                <div className="panel-tabs">
+                                    <button
+                                        className={`panel-tab ${activePanel === 'preview' ? 'active' : ''}`}
+                                        onClick={() => setActivePanel('preview')}
+                                    >
+                                        <Eye size={16} />
+                                        Preview
+                                    </button>
+                                    <button
+                                        className={`panel-tab ${activePanel === 'console' ? 'active' : ''}`}
+                                        onClick={() => setActivePanel('console')}
+                                    >
+                                        <Terminal size={16} />
+                                        Console
+                                    </button>
+                                    <button
+                                        className={`panel-tab ${activePanel === 'chat' ? 'active' : ''}`}
+                                        onClick={() => setActivePanel('chat')}
+                                    >
+                                        <MessageSquare size={16} />
+                                        Chat
+                                    </button>
+                                </div>
+
+                                <div className="panel-content">
+                                    {activePanel === 'preview' && (
+                                        <PreviewPanel project={project} />
+                                    )}
+                                    {activePanel === 'console' && (
+                                        <ConsolePanel />
+                                    )}
+                                    {activePanel === 'chat' && (
+                                        <ChatPanel project={project} initialDescription={initialDescription} />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        // Preview Panel Component
+        function PreviewPanel({ project }) {
+            const [previewKey, setPreviewKey] = useState(0);
+
+            const refreshPreview = () => {
+                setPreviewKey(prev => prev + 1);
+            };
+
+            if (!project.files['index.html']) {
+                return (
+                    <div className="no-preview">
+                        <Eye size={48} className="no-preview-icon" />
+                        <h3>No preview available</h3>
+                        <p>Create an index.html file to see preview</p>
+                    </div>
+                );
+            }
+
+            const htmlContent = project.files['index.html'].content;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+
+            return (
+                <>
+                    <div style={{ padding: '16px', borderBottom: '1px solid #374151', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>Live Preview</h3>
+                        <button className="btn" onClick={refreshPreview} style={{ padding: '4px 8px' }}>
+                            <RefreshCw size={16} />
+                        </button>
+                    </div>
+                    <div className="preview-container">
+                        <iframe
+                            key={previewKey}
+                            src={url}
+                            className="preview-iframe"
+                            title="Preview"
+                        />
+                    </div>
+                </>
+            );
+        }
+
+        // Console Panel Component
+        function ConsolePanel() {
+            const [logs, setLogs] = useState([
+                { timestamp: new Date().toLocaleTimeString(), message: '$ Ready', type: 'success' }
+            ]);
+
+            const clearConsole = () => {
+                setLogs([
+                    { timestamp: new Date().toLocaleTimeString(), message: '$ Console cleared', type: 'info' }
+                ]);
+            };
+
+            return (
+                <>
+                    <div className="console-header">
+                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>Console</h3>
+                        <button className="btn" onClick={clearConsole} style={{ padding: '4px 8px' }}>
+                            <Trash size={16} />
+                        </button>
+                    </div>
+                    <div className="console-output">
+                        {logs.map((log, index) => (
+                            <div key={index} className="console-line">
+                                <span className="console-timestamp">[{log.timestamp}]</span>
+                                <span className={`console-message console-${log.type}`}>{log.message}</span>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            );
+        }
+
+        // Chat Panel Component
+        function ChatPanel({ project, initialDescription }) {
+            const [messages, setMessages] = useState([
+                {
+                    id: '1',
+                    sender: 'ai',
+                    content: `Hi! I'm ready to help you build "${project.name}". What would you like to create or modify?`,
+                    timestamp: new Date()
+                }
+            ]);
+            const [inputValue, setInputValue] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const messagesEndRef = useRef(null);
+
+            useEffect(() => {
+                if (initialDescription && messages.length === 1) {
+                    const userMessage = {
+                        id: Date.now().toString(),
+                        sender: 'user',
+                        content: initialDescription,
+                        timestamp: new Date()
+                    };
+                    
+                    const aiResponse = {
+                        id: (Date.now() + 1).toString(),
+                        sender: 'ai',
+                        content: `Great! I'll help you build "${initialDescription.substring(0, 50)}${initialDescription.length > 50 ? '...' : ''}". I've created a basic structure to get you started. You can modify the code in the editor, and I'll help you add more features as needed.`,
+                        timestamp: new Date()
+                    };
+
+                    setMessages([messages[0], userMessage, aiResponse]);
+                }
+            }, [initialDescription, messages.length]);
+
+            useEffect(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages]);
+
+            const handleSendMessage = async () => {
+                if (!inputValue.trim() || isLoading) return;
+
+                const userMessage = {
+                    id: Date.now().toString(),
+                    sender: 'user',
+                    content: inputValue.trim(),
+                    timestamp: new Date()
+                };
+
+                setMessages(prev => [...prev, userMessage]);
+                setInputValue('');
+                setIsLoading(true);
+
+                // Simulate AI response with file modification
+                setTimeout(() => {
+                    const aiResponse = {
+                        id: (Date.now() + 1).toString(),
+                        sender: 'ai',
+                        content: generateAIResponse(inputValue.trim(), project),
+                        timestamp: new Date()
+                    };
+
+                    setMessages(prev => [...prev, aiResponse]);
+                    setIsLoading(false);
+                    
+                    // Simulate file modifications based on user input
+                    simulateFileModifications(inputValue.trim(), project, setProject);
+                }, 1500);
+            };
+
+            const generateAIResponse = (userInput, project) => {
+                // Enhanced AI responses with file modification simulation
+                const input = userInput.toLowerCase();
+                
+                if (input.includes('add') || input.includes('create')) {
+                    return "I'll add that feature to your project. Creating the necessary files and code...";
+                } else if (input.includes('change') || input.includes('modify') || input.includes('update')) {
+                    return "I'll modify your existing code to include those changes. Updating the relevant files...";
+                } else if (input.includes('fix') || input.includes('bug') || input.includes('error')) {
+                    return "I'll debug and fix that issue for you. Checking your code and applying fixes...";
+                } else if (input.includes('style') || input.includes('design') || input.includes('css')) {
+                    return "I'll update the styling to make it look better. Modifying your CSS files...";
+                } else if (input.includes('database') || input.includes('data') || input.includes('api')) {
+                    return "I'll set up the database/API functionality. Creating the backend structure...";
+                } else if (input.includes('react') || input.includes('component')) {
+                    return "I'll create React components for that functionality. Setting up the component structure...";
+                } else if (input.includes('python')) {
+                    return "I'll implement that using Python. Creating the Python scripts and modules...";
+                } else {
+                    const responses = [
+                        "I understand what you need. Let me implement that feature for you.",
+                        "Great idea! I'll build that functionality into your application.",
+                        "I can definitely help with that. Updating your project files now...",
+                        "Perfect! I'll add that to your project with the appropriate code structure.",
+                        "I'll create the necessary code to make that work. Building it now...",
+                        "Excellent request! I'll implement that feature with best practices."
+                    ];
+                    return responses[Math.floor(Math.random() * responses.length)];
+                }
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            };
+
+            // AI file modification simulation
+            const simulateFileModifications = (userInput, currentProject, setProject) => {
+                const input = userInput.toLowerCase();
+                
+                if (input.includes('button') && currentProject.files['index.html']) {
+                    // Add a button to HTML
+                    setTimeout(() => {
+                        setProject(prev => ({
+                            ...prev,
+                            files: {
+                                ...prev.files,
+                                'index.html': {
+                                    ...prev.files['index.html'],
+                                    content: prev.files['index.html'].content.replace(
+                                        '<button onclick="handleClick()" class="cta-button">Get Started</button>',
+                                        '<button onclick="handleClick()" class="cta-button">Get Started</button>\n                <button onclick="showAlert()" class="secondary-button">New Feature</button>'
+                                    )
+                                }
+                            }
+                        }));
+                    }, 2000);
+                } else if (input.includes('color') || input.includes('blue') || input.includes('red')) {
+                    // Modify CSS colors
+                    setTimeout(() => {
+                        if (currentProject.files['style.css']) {
+                            setProject(prev => ({
+                                ...prev,
+                                files: {
+                                    ...prev.files,
+                                    'style.css': {
+                                        ...prev.files['style.css'],
+                                        content: prev.files['style.css'].content + '\n\n/* AI-added styles */\n.new-feature { color: #3b82f6; background: linear-gradient(45deg, #667eea, #764ba2); }'
+                                    }
+                                }
+                            }));
+                        }
+                    }, 2000);
+                } else if (input.includes('function') || input.includes('javascript')) {
+                    // Add JavaScript function
+                    setTimeout(() => {
+                        if (currentProject.files['script.js']) {
+                            setProject(prev => ({
+                                ...prev,
+                                files: {
+                                    ...prev.files,
+                                    'script.js': {
+                                        ...prev.files['script.js'],
+                                        content: prev.files['script.js'].content + '\n\n// AI-generated function\nfunction newFeature() {\n    console.log("New feature added by AI!");\n    showNotification("AI added a new feature!", "success");\n}'
+                                    }
+                                }
+                            }));
+                        }
+                    }, 2000);
+                }
+            };
+
+            return (
+                <>
+                    <div style={{ padding: '16px', borderBottom: '1px solid #374151' }}>
+                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>AI Assistant</h3>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#9ca3af' }}>
+                            Tell me what you want to build and I'll modify your files
+                        </p>
+                    </div>
+                    
+                    <div className="chat-container">
+                        <div className="chat-messages">
+                            {messages.map(message => (
+                                <div key={message.id} className="message">
+                                    <div className={`message-avatar ${message.sender === 'user' ? 'user-avatar' : 'ai-avatar'}`}>
+                                        {message.sender === 'user' ? (
+                                            <User size={16} color="white" />
+                                        ) : (
+                                            <Bot size={16} color="#3b82f6" />
+                                        )}
+                                    </div>
+                                    <div className="message-content">
+                                        <div className="message-header">
+                                            <span className="message-sender">
+                                                {message.sender === 'user' ? 'You' : 'AI Assistant'}
+                                            </span>
+                                            <span className="message-time">
+                                                {message.timestamp.toLocaleTimeString()}
+                                            </span>
+                                        </div>
+                                        <div className="message-text">{message.content}</div>
+                                    </div>
+                                </div>
+                            ))}
+                            
+                            {isLoading && (
+                                <div className="message">
+                                    <div className="message-avatar ai-avatar">
+                                        <Bot size={16} color="#3b82f6" />
+                                    </div>
+                                    <div className="message-content">
+                                        <div className="message-header">
+                                            <span className="message-sender">AI Assistant</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div className="loading-spinner"></div>
+                                            <span style={{ color: '#6b7280', fontSize: '14px' }}>Thinking...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <div ref={messagesEndRef} />
+                        </div>
+                        
+                        <div className="chat-input">
+                            <input
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                className="chat-input-field"
+                                placeholder="Describe what you want to build..."
+                                disabled={isLoading}
+                            />
+                            <button
+                                onClick={handleSendMessage}
+                                disabled={!inputValue.trim() || isLoading}
+                                className="btn btn-primary"
+                            >
+                                <Send size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

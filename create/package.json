@@ -1,0 +1,23 @@
+{
+  "name": "ai-app-builder",
+  "version": "1.0.0",
+  "description": "AI-powered Replit clone for building applications",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000",
+    "build": "echo 'No build step needed for this standalone app'",
+    "serve": "python3 -m http.server 8000"
+  },
+  "keywords": ["ai", "app-builder", "ide", "replit", "clone"],
+  "author": "AI App Builder",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "lucide-react": "^0.263.1"
+  },
+  "devDependencies": {
+    "@babel/standalone": "^7.22.0"
+  }
+}
